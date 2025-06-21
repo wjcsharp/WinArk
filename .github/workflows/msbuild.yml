@@ -31,8 +31,7 @@ on:
 
 jobs:
   build:
-    runs-on: windows-latest
-
+    runs-on: windows-2022
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4.2.2
@@ -64,12 +63,6 @@ jobs:
     - name: install Zydis kernel library
       run: |
         .\vcpkg\vcpkg.exe install zydis
-
-    - name: Show tree
-      run: |
-        ls .
-        tree .
-        tree . | grep ".exe"
 
     - name: Compile WinArk
       run: |
