@@ -29,18 +29,37 @@ on:
       - synchronize
   workflow_dispatch:
 
+env:
+  # WDK for Windows 11, version 22H2
+  WDK_URL: https://go.microsoft.com/fwlink/?linkid=2196230
+  # Path to the solution file relative to the root of the project.
+  SOLUTION_FILE_PATH: ./Anti-Rootkit.sln
+  
 jobs:
   build:
     runs-on: windows-2022
+    strategy:
+      matrix:
+        BUILD_CONFIGURATION: [debug]
+        PLATFORM: [x64]
+
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4.2.2
+      with:
+        submodules: 'recursive'
+
+    - name: Setup WDK version 22H2
+      run: |
+        $wdkSetupPath = "$Env:TEMP\wdksetup.exe"
+        (New-Object Net.WebClient).DownloadFile('${{env.WDK_URL}}', $wdkSetupPath)
+        Start-Process -FilePath $wdkSetupPath -ArgumentList "/quiet" -NoNewWindow -Wait 
 
     - name: Set up Visual Studio
       uses: microsoft/setup-msbuild@v2
       with:
         msbuild-architecture: x64
-
+  
 # WDK has been contained in the image according to https://github.com/actions/runner-images/issues/5235
 
     - name: Install vcpkg
@@ -66,4 +85,4 @@ jobs:
 
     - name: Compile WinArk
       run: |
-        msbuild ./Anti-Rootkit.sln /p:Configuration=Release /p:Platform=x64
+        msbuild /m /p:Configuration=${{matrix.BUILD_CONFIGURATION}} /p:Platform=${{matrix.PLATFORM}} ${{env.SOLUTION_FILE_PATH}}
